@@ -1,4 +1,5 @@
-// app/api/products/import/route.ts
+//@ts-ignore
+
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createProduct } from '@/lib/server-actions';
