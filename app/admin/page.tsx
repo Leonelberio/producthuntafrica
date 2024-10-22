@@ -1,31 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PiBell, PiGear } from "react-icons/pi";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import PendingProducts from "./pending-products";
-import ActiveProducts from "./active-products"; // Import ActiveProducts component
+import ActiveProducts from "./active-products";
+import CsvImport from "./csv-import";
 import { auth } from "@/auth";
-import { 
-  getActiveProducts, 
-  getAdminData, 
-  getPendingProducts, 
-  getRejectedProducts, 
-  getTotalUpvotes, 
-  getUsers,
-  getCategories,  // Import the getCategories server action
-
- } from "@/lib/server-actions";
+import { getActiveProducts, getAdminData, getAllCategories, getPendingProducts, getRejectedProducts, getTotalUpvotes, getUsers } from "@/lib/server-actions";
 import OverviewChart from "@/components/overview-chart";
 import RecentActivity from "@/components/recent-activity";
-import CsvImport from "./csv-import";
+import AddCategoryClient from "./add-category";
 
 const Admin = async () => {
   const users = await getUsers();
@@ -35,12 +20,10 @@ const Admin = async () => {
   const rejectedProducts = await getRejectedProducts();
   const totalUpvotes = await getTotalUpvotes();
   const data = await getAdminData();
-  const categories = await getCategories();  // Fetch categories from the DB
 
-  
+  const categories =await getAllCategories()
+
   const premiumUsers = users.filter((user) => user.isPremium);
-
-  console.log(pendingProducts, "pending products here");
 
   return (
     <div className="px-8 md:px-20">
@@ -53,8 +36,7 @@ const Admin = async () => {
                 alt="logo"
                 width={500}
                 height={500}
-                className="w-20 h-20 md:w-40
-                         md:h-40 border rounded-md cursor-pointer"
+                className="w-20 h-20 md:w-40 md:h-40 border rounded-md cursor-pointer"
               />
             </Link>
 
@@ -76,64 +58,42 @@ const Admin = async () => {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-md font-bold">Users</CardTitle>👤
             </CardHeader>
-            <CardContent>
-              {users.length}
-            </CardContent>
+            <CardContent>{users.length}</CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-md font-bold">Premium Users</CardTitle>{" "}
-              💰
+              <CardTitle className="text-md font-bold">Premium Users</CardTitle> 💰
             </CardHeader>
-            <CardContent>
-              {premiumUsers.length}
-            </CardContent>
+            <CardContent>{premiumUsers.length}</CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-md font-bold">
-                Active Products
-              </CardTitle>{" "}
-              📦
+              <CardTitle className="text-md font-bold">Active Products</CardTitle> 📦
             </CardHeader>
-            <CardContent>
-            {activeProducts.length}
-            </CardContent>
+            <CardContent>{activeProducts.length}</CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-md font-bold">
-                Pending Products
-              </CardTitle>{" "}
-              🕒
+              <CardTitle className="text-md font-bold">Pending Products</CardTitle> 🕒
             </CardHeader>
-            <CardContent>
-              {pendingProducts.length}
-            </CardContent>
+            <CardContent>{pendingProducts.length}</CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-md font-bold">
-                Rejected Products
-              </CardTitle>
-              👤
+              <CardTitle className="text-md font-bold">Rejected Products</CardTitle> 👤
             </CardHeader>
-            <CardContent>
-              {rejectedProducts.length}
-            </CardContent>
+            <CardContent>{rejectedProducts.length}</CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-md font-bold">Upvotes</CardTitle> 🔺
             </CardHeader>
-            <CardContent>
-              {totalUpvotes}
-            </CardContent>
+            <CardContent>{totalUpvotes}</CardContent>
           </Card>
         </div>
 
@@ -160,16 +120,15 @@ const Admin = async () => {
 
         <Separator className="my-10" />
 
-        <CsvImport initialPendingProducts={pendingProducts} authenticatedUser={null} categories={categories} />
+        <AddCategoryClient initialCategories={categories} />
 
-     
+        <Separator className="my-10" />
+
+        <CsvImport initialPendingProducts={pendingProducts} authenticatedUser={authenticatedUser} categories={categories} />
 
         <div className="pb-10 space-y-10">
           <h1 className="text-2xl font-bold">Active Products</h1>
-          <ActiveProducts
-            activeProducts={activeProducts}
-            authenticatedUser={authenticatedUser}
-          />
+          <ActiveProducts activeProducts={activeProducts} authenticatedUser={authenticatedUser} />
         </div>
       </div>
     </div>

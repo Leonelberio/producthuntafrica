@@ -154,7 +154,7 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
 
           <div className="md:flex justify-between items-center">
             <div className="flex gap-x-2">
-              {currentProduct.categories.map((category: any) => (
+              {currentProduct.categories?.map((category: any) => (
                 <Link
                   href={`/category/${category.toLowerCase()}`}
                   key={category}
@@ -192,7 +192,7 @@ const ProductModalContent: React.FC<ProductModalContentProps> = ({
           <div>
             <div className="w-full flex gap-4 mt-4">
               <Image
-                src={authenticatedUser.user.image}
+                src={authenticatedUser?.user.image}
                 alt="profile"
                 width={50}
                 height={50}

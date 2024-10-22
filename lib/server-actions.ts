@@ -29,6 +29,7 @@ export const createProduct = async ({
   discord,
   images,
   category,
+  rank = 0
 }: ProductData): Promise<any> => {
   try {
     const authenticatedUser = await auth();
@@ -46,7 +47,6 @@ export const createProduct = async ({
     const product = await db.product.create({
       data: {
         name,
-        rank: 0,
         slug,
         headline,
         description,
@@ -76,6 +76,8 @@ export const createProduct = async ({
             id: userId,
           },
         },
+        rank: 0,
+
       },
     });
 
@@ -314,6 +316,36 @@ export const rejectProduct = async (productId: string, reason: string) => {
     console.error("Error rejecting product:", error);
     throw error;
   }
+};
+
+
+// Server action to add a category to the database
+export const addCategory = async (name: string) => {
+  const authenticatedUser = await auth();
+
+  if (!authenticatedUser || !authenticatedUser.user) {
+    throw new Error("You must be signed in to add a category.");
+  }
+
+  // Ensure category name is unique
+  const existingCategory = await db.category.findUnique({
+    where: {
+      name,
+    },
+  });
+
+  if (existingCategory) {
+    throw new Error("Category already exists.");
+  }
+
+  // Create new category
+  const category = await db.category.create({
+    data: {
+      name: name.trim(),
+    },
+  });
+
+  return category;
 };
 
 export const getActiveProducts = async () => {
@@ -563,6 +595,13 @@ export const getCategories = async () => {
   return categories;
 };
 
+// Server action to get all categories
+export const getAllCategories = async () => {
+  const categories = await db.category.findMany();
+  return categories;
+};
+
+
 export const getProductsByCategoryName = async (category: string) => {
   const products = await db.product.findMany({
     where: {
@@ -751,7 +790,6 @@ export const getRejectedProducts = async () => {
 
 export const getUsers = async () => {
   const users = await db.user.findMany();
-
   return users;
 }
 
@@ -809,6 +847,58 @@ export const getActiveProduct = async (productId: string) => {
   } catch (error) {
     console.error("Error getting active product:", error);
     return null;
+  }
+};
+
+
+
+export const bulkImportProducts = async (products: any[]) => {
+  try {
+    const authenticatedUser = await auth();
+
+    if (!authenticatedUser || !authenticatedUser.user) {
+      throw new Error("You must be signed in to import products.");
+    }
+
+    const createdProducts = await Promise.all(
+      products.map(async (product) => {
+        const categoriesArray = product.categories.map((category: string) => ({
+          where: { name: category },
+          create: { name: category },
+        }));
+
+        return await db.product.create({
+          data: {
+            name: product.name,
+            slug: product.slug,
+            headline: product.headline,
+            description: product.description,
+            logo: product.logo,
+            releaseDate: product.releaseDate,
+            website: product.website,
+            twitter: product.twitter,
+            discord: product.discord,
+            rank: 0,  // Pass the rank value to the database
+            images: {
+              createMany: { data: product.images.map((url: string) => ({ url })) },
+            },
+            categories: {
+              connectOrCreate: categoriesArray,
+            },
+            user: {
+              connect: {
+                id: authenticatedUser.user?.id ?? "",
+              },
+            },
+          },
+        });
+      })
+    );
+
+    return createdProducts;
+  } catch (error) {
+    console.error("Error importing products:", error);
+    throw new Error("Failed to import products");
   }
 };
 

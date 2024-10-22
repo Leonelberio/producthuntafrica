@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Papa from "papaparse";
 import PendingProducts from "./pending-products";
-import { ImagesUploader } from "@/components/images-uploader"; // Import ImagesUploader
-import { LogoUploader } from "@/components/logo-uploader"; // Import LogoUploader
+import { ImagesUploader } from "@/components/images-uploader";
+import { LogoUploader } from "@/components/logo-uploader";
 import {
   Table,
   TableBody,
@@ -24,15 +24,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+
+interface Category {
+  id: string;
+  name: string;
+}
 
 interface CsvImportProps {
   initialPendingProducts: any[];
   authenticatedUser: any;
-  categories: any[]; // Accept categories from the parent
+  categories: Category[];
 }
 
 const CsvImport: React.FC<CsvImportProps> = ({ initialPendingProducts, authenticatedUser, categories }) => {
-  const [pendingProducts, setPendingProducts] = useState(initialPendingProducts); // Manage client-side pending products
+  const [pendingProducts, setPendingProducts] = useState(initialPendingProducts);
   const [csvProducts, setCsvProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -56,7 +62,8 @@ const CsvImport: React.FC<CsvImportProps> = ({ initialPendingProducts, authentic
             twitter: product.twitter,
             discord: product.discord,
             images: product.images ? product.images.split(";").map((url: string) => url.trim()) : [],
-            categories: product.categories.split(";"),
+            categories: product.categories ? product.categories.split(";").map((cat: string) => cat.trim()) : [],
+            rank: product.rank || 0, // Ensure rank is included, defaulting to 0 if missing
           }));
           setCsvProducts(formattedProducts);
           setLoading(false);
@@ -86,19 +93,36 @@ const CsvImport: React.FC<CsvImportProps> = ({ initialPendingProducts, authentic
     setCsvProducts(updatedProducts);
   };
 
-  // Handle category selection
+  // Handle category selection with a max of 3 categories
   const handleCategoryChange = (index: number, selectedCategory: string) => {
     const updatedProducts = [...csvProducts];
     const productCategories = updatedProducts[index].categories || [];
 
-    // Toggle category selection
     if (productCategories.includes(selectedCategory)) {
       updatedProducts[index].categories = productCategories.filter(
         (category: string) => category !== selectedCategory
       );
-    } else {
+    } else if (productCategories.length < 3) {
       updatedProducts[index].categories = [...productCategories, selectedCategory];
+    } else {
+      alert("You can only select a maximum of 3 categories.");
     }
+
+    setCsvProducts(updatedProducts);
+  };
+
+  // Remove a category from a product
+  const handleRemoveCategory = (index: number, categoryToRemove: string) => {
+    const updatedProducts = [...csvProducts];
+    updatedProducts[index].categories = updatedProducts[index].categories.filter(
+      (category: string) => category !== categoryToRemove
+    );
+    setCsvProducts(updatedProducts);
+  };
+
+  // Remove a product row
+  const handleRemoveRow = (index: number) => {
+    const updatedProducts = csvProducts.filter((_, i) => i !== index);
     setCsvProducts(updatedProducts);
   };
 
@@ -106,8 +130,9 @@ const CsvImport: React.FC<CsvImportProps> = ({ initialPendingProducts, authentic
   const handleBulkImport = async () => {
     const validatedProducts = csvProducts.map((product) => ({
       ...product,
-      images: product.images || [],
-      categories: product.categories || [],
+      // images: product.images || [],
+      // categories: product.categories || [],
+      // rank: product.rank || 0, // Ensure rank is passed when importing
     }));
 
     try {
@@ -119,7 +144,6 @@ const CsvImport: React.FC<CsvImportProps> = ({ initialPendingProducts, authentic
         body: JSON.stringify({ products: validatedProducts }),
       });
       if (response.ok) {
-        // Update the pending products after a successful import
         setPendingProducts((prevPendingProducts) => [
           ...prevPendingProducts,
           ...validatedProducts,
@@ -149,10 +173,12 @@ const CsvImport: React.FC<CsvImportProps> = ({ initialPendingProducts, authentic
                 <TableHead>Slug</TableHead>
                 <TableHead>Headline</TableHead>
                 <TableHead>Description</TableHead>
+                <TableHead>Rank</TableHead> {/* Added Rank column */}
                 <TableHead>Logo</TableHead>
                 <TableHead>Images</TableHead>
                 <TableHead>Categories</TableHead>
                 <TableHead>Release Date</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -191,6 +217,14 @@ const CsvImport: React.FC<CsvImportProps> = ({ initialPendingProducts, authentic
                     />
                   </TableCell>
                   <TableCell>
+                    <input
+                      type="number"
+                      value={product.rank}
+                      onChange={(e) => handleFieldChange(index, "rank", e.target.value)}
+                      className="border px-2 py-1"
+                    />
+                  </TableCell> {/* Rank field */}
+                  <TableCell>
                     {product.logo ? (
                       <img src={product.logo} alt="logo" width={50} />
                     ) : (
@@ -219,7 +253,6 @@ const CsvImport: React.FC<CsvImportProps> = ({ initialPendingProducts, authentic
                     </div>
                   </TableCell>
                   <TableCell>
-                    {/* Wrapping SelectTrigger inside Select */}
                     <Select onValueChange={(value) => handleCategoryChange(index, value)}>
                       <SelectTrigger className="border px-2 py-1">
                         <SelectValue placeholder="Select Categories" />
@@ -229,8 +262,9 @@ const CsvImport: React.FC<CsvImportProps> = ({ initialPendingProducts, authentic
                           <SelectLabel>Categories</SelectLabel>
                           {categories.map((category) => (
                             <SelectItem
-                              key={category.id}
-                              value={category.name}
+                              key={category.id} // Correct usage of category object
+                              value={category.name} // Using category name for value
+                              disabled={product.categories.length >= 3 && !product.categories.includes(category.name)}
                             >
                               {category.name}
                             </SelectItem>
@@ -238,10 +272,18 @@ const CsvImport: React.FC<CsvImportProps> = ({ initialPendingProducts, authentic
                         </SelectGroup>
                       </SelectContent>
                     </Select>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1 mt-2">
                       {product.categories?.map((cat: string, catIndex: number) => (
-                        <span key={catIndex} className="border px-2 py-1 rounded-md">
+                        <span key={catIndex} className="border px-2 py-1 rounded-md bg-gray-100 flex items-center">
                           {cat}
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="ml-2"
+                            onClick={() => handleRemoveCategory(index, cat)}
+                          >
+                            X
+                          </Button>
                         </span>
                       ))}
                     </div>
@@ -254,12 +296,17 @@ const CsvImport: React.FC<CsvImportProps> = ({ initialPendingProducts, authentic
                       className="border px-2 py-1"
                     />
                   </TableCell>
+                  <TableCell>
+                    <Button size="sm" variant="destructive" onClick={() => handleRemoveRow(index)}>
+                      Remove Row
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell colSpan={8}>
+                <TableCell colSpan={10}>
                   <button
                     onClick={handleBulkImport}
                     className="bg-blue-500 text-white px-4 py-2 rounded-md"

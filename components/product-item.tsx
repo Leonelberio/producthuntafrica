@@ -38,7 +38,9 @@ const ProductItem: React.FC<ProductItemProps> = ({
   const handleProductItemClick = () => {
     if (!authenticatedUser) {
       setShowLoginModal(true);
-    } else {
+    } else
+    
+    {
       setCurrentProduct(product);
       setShowProductModal(true);
     }

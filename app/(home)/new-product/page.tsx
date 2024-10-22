@@ -1,60 +1,25 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { ImagesUploader } from "@/components/images-uploader";
 import { LogoUploader } from "@/components/logo-uploader";
 import Image from "next/image";
-import React, { useCallback, useState } from "react";
-
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import {
-  PiCalendar,
-  PiDiscordLogoFill,
-  PiPlanet,
-  PiTwitterLogoFill,
-  PiXCircleFill,
-} from "react-icons/pi";
+import { PiCalendar, PiDiscordLogoFill, PiPlanet, PiTwitterLogoFill, PiXCircleFill } from "react-icons/pi";
 import { Separator } from "@/components/ui/separator";
-import { createProduct } from "@/lib/server-actions";
+import { createProduct, getAllCategories, getCategories } from "@/lib/server-actions"; // Import server action to fetch categories
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
-const categories = [
-  "Media",
-  "Blockchain",
-  "Cloud",
-  "Commerce",
-  "Cybersecurity",
-  "Data",
-  "Design",
-  "Photography",
-  "E-commerce",
-  "Education",
-  "Entertainment",
-  "Video",
-  "Finance",
-  "Social",
-  "Health",
-  "Fitness",
-  "Marketing",
-  "Music",
-  "Productivity",
-  "Engineering",
-  "Sales",
-  "Sports",
-  "Travel",
-  "Bootstrapped",
-  "Art",
-  "Analytics",
-];
+// No hardcoded categories anymore
 
 const NewProduct = () => {
   const [loading, setLoading] = useState(false);
@@ -66,15 +31,25 @@ const NewProduct = () => {
   const [website, setWebsite] = useState("");
   const [twitter, setTwitter] = useState("");
   const [discord, setDiscord] = useState("");
-
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
-
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const [uploadedLogoUrl, setUploadedLogoUrl] = useState<string>("");
-
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [uploadedProductImages, setUploadedProductImages] = useState<string[]>(
-    []
-  );
+  const [uploadedProductImages, setUploadedProductImages] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>([]); // Categories state
+
+  // Fetch categories from the server on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const fetchedCategories = await getAllCategories(); // Fetch categories from server action
+        setCategories(fetchedCategories.map((cat: any) => cat.name)); // Assuming the server returns an array of objects with a 'name' field
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleHeadlineChange = (e: any) => {
     const headlineText = e.target.value.slice(0, 70);
@@ -102,12 +77,10 @@ const NewProduct = () => {
     const truncatedName = productName.slice(0, 30);
     setName(truncatedName);
 
-    //create slug from product name
-
     const slugValue = truncatedName
       .toLowerCase()
-      .replace(/\s+/g, "-") // Replace spaces with hyphens
-      .replace(/\./g, "-"); // Replace periods with hyphens in the slug
+      .replace(/\s+/g, "-")
+      .replace(/\./g, "-");
     setSlug(slugValue);
   };
 
@@ -140,11 +113,8 @@ const NewProduct = () => {
             </div>
           </div>
         </>,
-        {
-          position: "top-center",
-        }
+        { position: "top-center" }
       );
-
       return;
     }
 
@@ -158,9 +128,7 @@ const NewProduct = () => {
             </div>
           </div>
         </>,
-        {
-          position: "top-center",
-        }
+        { position: "top-center" }
       );
       return;
     }
@@ -175,9 +143,7 @@ const NewProduct = () => {
             </div>
           </div>
         </>,
-        {
-          position: "top-center",
-        }
+        { position: "top-center" }
       );
       return;
     }
@@ -191,9 +157,7 @@ const NewProduct = () => {
             </div>
           </div>
         </>,
-        {
-          position: "top-center",
-        }
+        { position: "top-center" }
       );
       return;
     }
@@ -208,9 +172,7 @@ const NewProduct = () => {
             </div>
           </div>
         </>,
-        {
-          position: "top-center",
-        }
+        { position: "top-center" }
       );
       return;
     }
@@ -225,9 +187,7 @@ const NewProduct = () => {
             </div>
           </div>
         </>,
-        {
-          position: "top-center",
-        }
+        { position: "top-center" }
       );
       return;
     }
@@ -242,9 +202,7 @@ const NewProduct = () => {
             </div>
           </div>
         </>,
-        {
-          position: "top-center",
-        }
+        { position: "top-center" }
       );
       return;
     }
@@ -259,9 +217,7 @@ const NewProduct = () => {
             </div>
           </div>
         </>,
-        {
-          position: "top-center",
-        }
+        { position: "top-center" }
       );
       return;
     }
@@ -280,9 +236,6 @@ const NewProduct = () => {
     twitter,
     discord,
   ]);
-
-
-
 
   const prevStep = useCallback(() => {
     setStep(step - 1);
