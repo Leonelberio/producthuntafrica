@@ -2,7 +2,6 @@
 
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-
 interface ProductData {
   name: string;
   slug: string;
@@ -40,6 +39,10 @@ export const createProduct = async ({
 
     const userId = authenticatedUser.user?.id;
 
+    // Assurez-vous que les propriétés images et category sont des tableaux
+    const imagesArray = images || [];
+    const categoryArray = category || [];
+
     const product = await db.product.create({
       data: {
         name,
@@ -54,7 +57,7 @@ export const createProduct = async ({
         discord,
         status: "PENDING",
         categories: {
-          connectOrCreate: category.map((name) => ({
+          connectOrCreate: categoryArray.map((name) => ({
             where: {
               name,
             },
@@ -65,10 +68,9 @@ export const createProduct = async ({
         },
         images: {
           createMany: {
-            data: images.map((image) => ({ url: image })),
+            data: imagesArray.map((url) => ({ url })),
           },
         },
-
         user: {
           connect: {
             id: userId,
@@ -779,3 +781,86 @@ export const getAdminData = async () => {
     totalCategories,
   };
 }
+
+export const getActiveProduct = async (productId: string) => {
+  try {
+    const product = await db.product.findUnique({
+      where: {
+        id: productId,
+        status: "ACTIVE",
+      },
+      include: {
+        categories: true,
+        images: true,
+        comments: {
+          include: {
+            user: true,
+          },
+        },
+        upvotes: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    return product;
+  } catch (error) {
+    console.error("Error getting active product:", error);
+    return null;
+  }
+};
+
+
+export const activateProductsBulk = async (productIds: string[]) => {
+  try {
+    const products = await db.product.findMany({
+      where: {
+        id: {
+          in: productIds,
+        },
+        status: "PENDING", // Optional, to only update pending products
+      },
+    });
+
+    const updatePromises = products.map((product) =>
+      db.product.update({
+        where: { id: product.id },
+        data: { status: "ACTIVE" },
+      })
+    );
+
+    // Execute all updates
+    await Promise.all(updatePromises);
+
+    return { message: "Products activated successfully" };
+  } catch (error) {
+    console.error("Error activating products:", error);
+    throw error;
+  }
+};
+
+
+export const bulkDeleteProducts = async (productIds: string[]): Promise<void> => {
+  try {
+    const authenticatedUser = await auth();
+
+    if (!authenticatedUser) {
+      throw new Error("Unauthorized");
+    }
+
+    // Ensure only the owner can delete their products
+    await db.product.deleteMany({
+      where: {
+        id: {
+          in: productIds, // Delete products with the provided IDs
+        },
+        userId: authenticatedUser.user?.id, // Ensure the user owns the products
+      },
+    });
+  } catch (error) {
+    console.error("Error deleting products:", error);
+    throw error;
+  }
+};

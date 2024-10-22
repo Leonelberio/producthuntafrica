@@ -2,9 +2,7 @@ const items = [
     {
       title: "About Us",
     },
-    {
-      title: "Careers",
-    },
+  
     {
       title: "Apps",
     },

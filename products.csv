@@ -1,0 +1,3 @@
+id,name,slug,headline,rank,description,logo,releaseDate,website,twitter,discord,userId,status,images,categories
+cm26heqv40000du7zk2wdc2pv,Leonel,leonel,Beautiful Headline,0,Beautiful description,https://images.pexels.com/photos/1231231/pexels-photo-1231231.jpeg,10/12/2024,https://live.com,@beautiful,@beautiful,cm1uiln8g0000l79lyqhejw8y,ACTIVE,https://images.pexels.com/photos/1231231/pexels-photo-1231231.jpeg,Category1;Category2;Category3
+cm26heqv40000du7zk2wdc2pw,Product2,product-2,Another Headline,1,Another description,https://images.pexels.com/photos/1231232/pexels-photo-1231232.jpeg,11/12/2024,https://example.com,@example,@example,cm1uiln8g0000l79lyqhejw8z,ACTIVE,https://images.pexels.com/photos/1231231/pexels-photo-1231231.jpeg,Category4;Category5;Category6

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import PendingProducts from "./pending-products";
+import ActiveProducts from "./active-products"; // Import ActiveProducts component
 import { auth } from "@/auth";
 import { 
   getActiveProducts, 
@@ -18,10 +19,13 @@ import {
   getPendingProducts, 
   getRejectedProducts, 
   getTotalUpvotes, 
-  getUsers
+  getUsers,
+  getCategories,  // Import the getCategories server action
+
  } from "@/lib/server-actions";
 import OverviewChart from "@/components/overview-chart";
 import RecentActivity from "@/components/recent-activity";
+import CsvImport from "./csv-import";
 
 const Admin = async () => {
   const users = await getUsers();
@@ -31,11 +35,10 @@ const Admin = async () => {
   const rejectedProducts = await getRejectedProducts();
   const totalUpvotes = await getTotalUpvotes();
   const data = await getAdminData();
+  const categories = await getCategories();  // Fetch categories from the DB
 
+  
   const premiumUsers = users.filter((user) => user.isPremium);
-
-
-
 
   console.log(pendingProducts, "pending products here");
 
@@ -134,7 +137,6 @@ const Admin = async () => {
           </Card>
         </div>
 
-
         <div className="grid md:grid-cols-2 lg:grid-cols-7 my-4 gap-4">
           <Card className="col-span-4">
             <CardHeader>
@@ -145,25 +147,27 @@ const Admin = async () => {
             </CardContent>
           </Card>
 
-<Card className="w-full col-span-4 md:col-span-3">
-  <CardHeader>
-    <CardTitle>Recent Activity</CardTitle>
-    <CardDescription>View recent activity</CardDescription>
-
-  </CardHeader>
-  <CardContent>
-    <RecentActivity users={users} />
-  </CardContent>
-</Card>
-
+          <Card className="w-full col-span-4 md:col-span-3">
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>View recent activity</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RecentActivity users={users} />
+            </CardContent>
+          </Card>
         </div>
 
         <Separator className="my-10" />
 
+        <CsvImport initialPendingProducts={pendingProducts} authenticatedUser={null} categories={categories} />
+
+     
+
         <div className="pb-10 space-y-10">
-          <h1 className="text-2xl font-bold">Pending Products</h1>
-          <PendingProducts
-            pendingProducts={pendingProducts}
+          <h1 className="text-2xl font-bold">Active Products</h1>
+          <ActiveProducts
+            activeProducts={activeProducts}
             authenticatedUser={authenticatedUser}
           />
         </div>

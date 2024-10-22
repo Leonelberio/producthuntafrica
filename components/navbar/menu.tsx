@@ -14,28 +14,28 @@ const Menu = () => {
   return (
     <div className="hidden lg:flex items-center relative">
       <div className="space-x-6 text-gray-600 text-sm flex items-center cursor-pointer">
-        <div
+        {/* <div
           onMouseEnter={() => setShowLaunchesMenu(true)}
           onMouseLeave={() => setShowLaunchesMenu(false)}
           className="hover:text-[#ff6154] py-4"
         >
           Launches {showLaunchesMenu && <LaunchesMenu />}
-        </div>
+        </div> */}
 
         <Link href={"/categories"} className="hover:text-[#ff6154]">
           Categories
         </Link>
 
-        <div
+        {/* <div
         onMouseEnter={() => setShowCommunityMenu(true)}
         onMouseLeave={() => setShowCommunityMenu(false)}
         className="hover:text-[#ff6154] py-4"
         
         >
             Community {showCommunityMenu && <CommunityMenu />}
-        </div>
+        </div> */}
 
-        <div className="hover:text-[#ff6154] py-4">Advertise</div>
+        {/* <div className="hover:text-[#ff6154] py-4">Advertise</div> */}
 
         <div
         onMouseEnter={() => setShowAboutMenu(true)}
